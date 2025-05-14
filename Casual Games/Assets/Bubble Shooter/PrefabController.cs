@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PrefabController : MonoBehaviour
@@ -34,6 +35,48 @@ public class PrefabController : MonoBehaviour
             if (!string.IsNullOrEmpty(collision.gameObject.tag))
             {
                 Debug.Log($"충돌한 오브젝트의 태그: {collision.gameObject.tag}");
+            }
+
+            // 같은 종류의 프리팹이 3개 연속으로 연결되어 있는지 확인
+            CheckAndDestroyConnectedPrefabs();
+        }
+    }
+
+    void CheckAndDestroyConnectedPrefabs()
+    {
+        // 연결된 프리팹을 추적하기 위한 리스트
+        List<GameObject> connectedPrefabs = new List<GameObject>();
+        FindConnectedPrefabs(gameObject, connectedPrefabs);
+
+        // 같은 종류의 프리팹이 3개 이상 연결되어 있으면 삭제
+        if (connectedPrefabs.Count >= 3)
+        {
+            foreach (GameObject prefab in connectedPrefabs)
+            {
+                Destroy(prefab);
+            }
+            Debug.Log($"{connectedPrefabs.Count}개의 {gameObject.name} 프리팹이 삭제되었습니다.");
+        }
+    }
+
+    void FindConnectedPrefabs(GameObject current, List<GameObject> connectedPrefabs)
+    {
+        // 이미 리스트에 추가된 경우 중복 방지
+        if (connectedPrefabs.Contains(current)) return;
+
+        // 현재 프리팹 추가
+        connectedPrefabs.Add(current);
+
+        // 현재 프리팹의 태그
+        string currentTag = current.tag;
+
+        // 현재 프리팹과 충돌한 모든 오브젝트 확인
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(current.transform.position, 0.8f);
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider.gameObject != current && collider.gameObject.CompareTag(currentTag))
+            {
+                FindConnectedPrefabs(collider.gameObject, connectedPrefabs);
             }
         }
     }

@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1743906159395516511}
   m_Layer: 0
   m_Name: Iron
-  m_TagString: Untagged
+  m_TagString: Iron
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
