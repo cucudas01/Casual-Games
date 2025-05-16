@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PrefabController : MonoBehaviour
 {
     private Rigidbody2D rb;
+    private bool isFixed = false; // 상태: 멈췄는지 여부
 
     void Start()
     {
@@ -11,6 +13,16 @@ public class PrefabController : MonoBehaviour
         if (rb == null)
         {
             Debug.LogError("Rigidbody2D가 연결되지 않았습니다!");
+        }
+    }
+
+    void Update()
+    {
+        // 상태가 true(멈춘 상태)일 때 y좌표가 -4 이하이면 Restart 씬으로 전환
+        if (isFixed && transform.position.y <= -4f)
+        {
+            Debug.Log("프리팹이 멈췄고 y <= -4이므로 Restart 씬으로 전환합니다.");
+            SceneManager.LoadScene("Restart");
         }
     }
 
@@ -29,6 +41,7 @@ public class PrefabController : MonoBehaviour
             // 속도를 0으로 설정하고 물리 시뮬레이션 중지
             rb.velocity = Vector2.zero;
             rb.isKinematic = true;
+            isFixed = true; // 상태를 true로 변경
             Debug.Log($"{gameObject.name}이(가) {collision.gameObject.name}과(와) 충돌하여 멈췄습니다.");
 
             // 충돌한 오브젝트의 태그 출력 (필요한 경우)
