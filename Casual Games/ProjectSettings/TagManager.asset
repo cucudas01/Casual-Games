@@ -10,7 +10,7 @@ TagManager:
   - Fire
   - Diamond
   - Coin
-  - Line
+  - line
   layers:
   - Default
   - TransparentFX

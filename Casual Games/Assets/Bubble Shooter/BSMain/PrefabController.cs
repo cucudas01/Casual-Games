@@ -18,12 +18,46 @@ public class PrefabController : MonoBehaviour
 
     void Update()
     {
+        // 논리적으로 'line'과 연결되어 있지 않으면 삭제
+        if (isFixed)
+        {
+            HashSet<GameObject> visited = new HashSet<GameObject>();
+            if (!IsConnectedToLineRecursive(gameObject, visited))
+            {
+                Debug.Log($"{gameObject.name}이(가) 'line'과 연결되어 있지 않아 삭제됨.");
+                DestroyWithScoreCheck();
+                return;
+            }
+        }
+
         // 상태가 true(멈춘 상태)일 때 y좌표가 -4 이하이면 Restart 씬으로 전환
         if (isFixed && transform.position.y <= -4f)
         {
             Debug.Log("프리팹이 멈췄고 y <= -4이므로 Restart 씬으로 전환합니다.");
             SceneManager.LoadScene("Restart");
         }
+    }
+
+    // 논리적 연결(재귀) 검사 함수 - 태그와 상관없이 PrefabController가 붙은 모든 프리팹을 따라감
+    bool IsConnectedToLineRecursive(GameObject obj, HashSet<GameObject> visited)
+    {
+        if (visited.Contains(obj)) return false;
+        visited.Add(obj);
+
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(obj.transform.position, 0.9f);
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider.gameObject == obj) continue;
+            if (collider.CompareTag("line")) return true;
+
+            // PrefabController가 붙어있는 오브젝트라면 태그와 상관없이 재귀적으로 검사
+            if (collider.GetComponent<PrefabController>() != null)
+            {
+                if (IsConnectedToLineRecursive(collider.gameObject, visited))
+                    return true;
+            }
+        }
+        return false;
     }
 
     // 충돌 이벤트 처리
@@ -44,12 +78,6 @@ public class PrefabController : MonoBehaviour
             isFixed = true; // 상태를 true로 변경
             Debug.Log($"{gameObject.name}이(가) {collision.gameObject.name}과(와) 충돌하여 멈췄습니다.");
 
-            // 충돌한 오브젝트의 태그 출력 (필요한 경우)
-            if (!string.IsNullOrEmpty(collision.gameObject.tag))
-            {
-                Debug.Log($"충돌한 오브젝트의 태그: {collision.gameObject.tag}");
-            }
-
             // 같은 종류의 프리팹이 3개 연속으로 연결되어 있는지 확인
             CheckAndDestroyConnectedPrefabs();
         }
@@ -57,7 +85,7 @@ public class PrefabController : MonoBehaviour
 
     void CheckAndDestroyConnectedPrefabs()
     {
-        // 연결된 프리팹을 추적하기 위한 리스트
+        // 같은 종류(같은 태그)로 연속 연결된 프리팹만 찾기
         List<GameObject> connectedPrefabs = new List<GameObject>();
         FindConnectedPrefabs(gameObject, connectedPrefabs);
 
@@ -66,24 +94,23 @@ public class PrefabController : MonoBehaviour
         {
             foreach (GameObject prefab in connectedPrefabs)
             {
-                Destroy(prefab);
+                PrefabController pc = prefab.GetComponent<PrefabController>();
+                if (pc != null)
+                    pc.DestroyWithScoreCheck();
+                else
+                    Destroy(prefab);
             }
             Debug.Log($"{connectedPrefabs.Count}개의 {gameObject.name} 프리팹이 삭제되었습니다.");
         }
     }
 
+    // 같은 태그(종류)끼리만 연속적으로 따라감
     void FindConnectedPrefabs(GameObject current, List<GameObject> connectedPrefabs)
     {
-        // 이미 리스트에 추가된 경우 중복 방지
         if (connectedPrefabs.Contains(current)) return;
-
-        // 현재 프리팹 추가
         connectedPrefabs.Add(current);
 
-        // 현재 프리팹의 태그
         string currentTag = current.tag;
-
-        // 현재 프리팹과 충돌한 모든 오브젝트 확인
         Collider2D[] colliders = Physics2D.OverlapCircleAll(current.transform.position, 0.8f);
         foreach (Collider2D collider in colliders)
         {
@@ -92,5 +119,19 @@ public class PrefabController : MonoBehaviour
                 FindConnectedPrefabs(collider.gameObject, connectedPrefabs);
             }
         }
+    }
+
+    // y좌표 -4 이상에서 삭제될 때 ScoreCounter에 알림
+    public void DestroyWithScoreCheck()
+    {
+        if (transform.position.y >= -4f)
+        {
+            ScoreCounter scoreCounter = FindObjectOfType<ScoreCounter>();
+            if (scoreCounter != null)
+            {
+                scoreCounter.AddDestroyedCount();
+            }
+        }
+        Destroy(gameObject);
     }
 }
