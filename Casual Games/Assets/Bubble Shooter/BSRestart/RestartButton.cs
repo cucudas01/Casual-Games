@@ -1,18 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RestartButton : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    // 버튼 클릭 시 호출할 함수
+    public void OnRestartButtonClicked()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        ScoreCounter.destroyedCount = 0; // 스코어 초기화
+        SceneManager.LoadScene("Bubble Shooter");
     }
 }

@@ -3,7 +3,7 @@ using TMPro;
 
 public class ScoreCounter : MonoBehaviour
 {
-    public int destroyedCount = 0;
+    public static int destroyedCount = 0;  // 파괴된 버블 수, static으로 선언하여 다른 스크립트, 씬에서도 접근 가능
     public TMP_Text destroyedCountText; // TextMeshPro용
 
     void Start()
